@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#10213b" />
+  <title>I/O Transfer Lab | COA Micro Project</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-mark" aria-hidden="true">I/O</div>
+    <div class="brand-copy">
+      <p class="eyebrow">SANJIVANI UNIVERSITY · COMPUTER ORGANIZATION & ARCHITECTURE</p>
+      <h1>I/O Transfer Lab</h1>
+      <p class="subtitle">Interactive Programmed I/O, Interrupt-Driven I/O & DMA Simulator</p>
+    </div>
+    <nav class="header-nav" aria-label="Main navigation">
+      <a href="#simulator">Simulator</a>
+      <a href="#comparison">Comparison</a>
+      <a href="#learn">Learn</a>
+    </nav>
+    <span class="project-badge">CO5 MICRO PROJECT</span>
+  </header>
+
+  <main class="page">
+    <section class="intro panel">
+      <div>
+        <p class="section-kicker">LEARN BY SIMULATING</p>
+        <h2>See how data moves between a device, CPU, and memory.</h2>
+        <p class="muted">Explore how data travels between an I/O device, CPU, and main memory. Configure a workload, step through the events, and compare the three transfer methods using calculated simulation metrics.</p>
+        <div class="intro-chips"><span>Interactive visualization</span><span>Real-time metrics</span><span>No installation</span></div>
+      </div>
+      <div class="intro-stat">
+        <span class="intro-stat-number">03</span>
+        <span>transfer methods</span>
+        <span class="intro-stat-number">LIVE</span>
+        <span>step-by-step lab</span>
+      </div>
+    </section>
+
+    <section class="panel controls-panel" aria-labelledby="setup-title" id="simulator">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">SIMULATION SETUP</p>
+          <h2 id="setup-title">Configure the transfer</h2>
+        </div>
+        <button id="resetBtn" class="button button-ghost" type="button">Reset</button>
+      </div>
+
+      <div class="method-grid" role="group" aria-label="Choose transfer method">
+        <button class="method-card selected" data-method="programmed" type="button" aria-pressed="true">
+          <span class="method-icon">01</span>
+          <span class="method-title">Programmed I/O</span>
+          <span class="method-description">CPU repeatedly checks device status and transfers each unit.</span>
+        </button>
+        <button class="method-card" data-method="interrupt" type="button" aria-pressed="false">
+          <span class="method-icon">02</span>
+          <span class="method-title">Interrupt-Driven I/O</span>
+          <span class="method-description">Device interrupts the CPU when it is ready for service.</span>
+        </button>
+        <button class="method-card" data-method="dma" type="button" aria-pressed="false">
+          <span class="method-icon">03</span>
+          <span class="method-title">Direct Memory Access (DMA)</span>
+          <span class="method-description">DMA controller transfers a block with less CPU involvement.</span>
+        </button>
+      </div>
+
+      <div class="input-grid">
+        <label class="field">
+          <span>Data units to transfer</span>
+          <input id="dataUnits" type="number" min="1" max="20" value="5" />
+          <small>Choose from 1 to 20 units.</small>
+        </label>
+        <label class="field">
+          <span>Device ready delay (ticks)</span>
+          <input id="readyDelay" type="number" min="0" max="10" value="2" />
+          <small>Simulated wait before each device service.</small>
+        </label>
+        <label class="field">
+          <span>CPU cost per polling check</span>
+          <input id="pollCost" type="number" min="1" max="5" value="1" />
+          <small>Used by Programmed I/O.</small>
+        </label>
+        <label class="field">
+          <span>Interrupt service cost</span>
+          <input id="interruptCost" type="number" min="1" max="5" value="2" />
+          <small>CPU work for each interrupt service.</small>
+        </label>
+      </div>
+      <div class="action-row">
+        <button id="runBtn" class="button button-primary" type="button">▶ Run simulation</button>
+        <button id="stepBtn" class="button button-secondary" type="button">Next step →</button>
+        <button id="autoBtn" class="button button-secondary" type="button">Auto-play</button>
+        <span id="statusMessage" class="status-message" role="status">Ready to simulate.</span>
+      </div>
+      <p id="errorMessage" class="error-message" role="alert"></p>
+    </section>
+
+    <section class="dashboard-grid">
+      <section class="panel visual-panel" aria-labelledby="visual-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">LIVE SYSTEM VIEW</p>
+            <h2 id="visual-title">Data transfer path</h2>
+          </div>
+          <span id="methodPill" class="pill">Programmed I/O</span>
+        </div>
+        <div class="system-map" id="systemMap">
+          <div class="system-node" id="deviceNode">
+            <span class="node-symbol">▤</span>
+            <strong>I/O Device</strong>
+            <small id="deviceState">Waiting</small>
+          </div>
+          <div class="connection">
+            <span class="connection-line" id="deviceLink"></span>
+            <span class="connection-label">Data / status</span>
+          </div>
+          <div class="system-node" id="cpuNode">
+            <span class="node-symbol">▦</span>
+            <strong>CPU</strong>
+            <small id="cpuState">Ready</small>
+          </div>
+          <div class="connection">
+            <span class="connection-line" id="memoryLink"></span>
+            <span class="connection-label">Memory bus</span>
+          </div>
+          <div class="system-node" id="memoryNode">
+            <span class="node-symbol">▥</span>
+            <strong>Main Memory</strong>
+            <small id="memoryState">0 units stored</small>
+          </div>
+          <div class="system-node dma-node" id="dmaNode">
+            <span class="node-symbol">⇄</span>
+            <strong>DMA Controller</strong>
+            <small id="dmaState">Inactive</small>
+          </div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Transfer progress</span><strong id="progressText">0 / 5 units</strong></div>
+          <div class="progress-track" role="progressbar" aria-label="Transfer progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progressBar" class="progress-bar"></div></div>
+        </div>
+        <div class="memory-slots" id="memorySlots" aria-label="Memory units"></div>
+      </section>
+
+      <section class="panel metrics-panel">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">MEASURED RESULTS</p>
+            <h2>Performance metrics</h2>
+          </div>
+        </div>
+        <div class="metric-grid">
+          <article class="metric-card"><span>Total elapsed ticks</span><strong id="elapsedMetric">—</strong><small>Simulated time</small></article>
+          <article class="metric-card"><span>CPU busy ticks</span><strong id="busyMetric">—</strong><small>Ticks spent on I/O handling</small></article>
+          <article class="metric-card"><span>CPU involvement</span><strong id="involvementMetric">—</strong><small>Busy ticks ÷ elapsed ticks</small></article>
+          <article class="metric-card"><span>Units transferred</span><strong id="unitsMetric">0 / 5</strong><small>Completed data units</small></article>
+        </div>
+        <div class="insight-box">
+          <span class="insight-icon">✦</span>
+          <div><strong>What this means</strong><p id="insightText">Run the simulation to see how the selected method uses the CPU.</p></div>
+        </div>
+        <div class="mini-legend">
+          <span><i class="legend-dot dot-busy"></i> CPU active</span>
+          <span><i class="legend-dot dot-transfer"></i> Data transfer</span>
+          <span><i class="legend-dot dot-wait"></i> Waiting / idle</span>
+        </div>
+      </section>
+    </section>
+
+    <section class="panel step-panel" aria-labelledby="trace-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">EXECUTION TRACE</p>
+          <h2 id="trace-title">Step-by-step log</h2>
+        </div>
+        <span id="stepCounter" class="counter">Step 0 of 0</span>
+      </div>
+      <div class="current-step" id="currentStep">
+        <span class="current-step-tag">CURRENT STEP</span>
+        <p>Select a method and click <strong>Run simulation</strong> to generate the execution trace.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Step</th><th>Time</th><th>Actor</th><th>Operation</th><th>System result</th></tr></thead>
+          <tbody id="traceBody"><tr><td colspan="5" class="empty-cell">No simulation steps yet.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel compare-panel" id="comparison">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">SIDE-BY-SIDE ANALYSIS</p>
+          <h2>Compare all three methods</h2>
+        </div>
+        <button id="compareBtn" class="button button-secondary" type="button">Compare methods</button>
+      </div>
+      <p class="muted">Uses the current input settings and the same number of data units for a fair conceptual comparison.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Method</th><th>Elapsed ticks</th><th>CPU busy ticks</th><th>CPU involvement</th><th>Units transferred</th></tr></thead>
+          <tbody id="compareBody"><tr><td colspan="5" class="empty-cell">Select “Compare methods” to calculate the comparison.</td></tr></tbody>
+        </table>
+      </div>
+      <p class="note">Educational model: these are relative simulated ticks, not benchmark measurements of a real computer. Real systems depend on hardware, operating system, device speed, buffering, and transfer size.</p>
+    </section>
+
+    <section class="learning-grid" id="learn">
+      <article class="panel learning-card">
+        <p class="section-kicker">CONCEPT NOTES</p>
+        <h2>How the methods work</h2>
+        <div class="concept-item"><h3>Programmed I/O</h3><p>The CPU checks the device status repeatedly. Once ready, the CPU moves each data unit. This is simple, but polling can keep the CPU busy while waiting.</p></div>
+        <div class="concept-item"><h3>Interrupt-Driven I/O</h3><p>The CPU can do other work while the device prepares data. The device sends an interrupt when it needs service, and the CPU runs an interrupt service routine.</p></div>
+        <div class="concept-item"><h3>DMA</h3><p>The CPU configures the DMA controller with the source, destination, and transfer size. The controller transfers the block to memory and typically interrupts the CPU when the block is complete.</p></div>
+      </article>
+      <article class="panel learning-card">
+        <p class="section-kicker">ALGORITHM & ASSUMPTIONS</p>
+        <h2>Simulation rules</h2>
+        <ol class="algorithm-list">
+          <li>Validate the workload and timing parameters.</li>
+          <li>Create one transfer operation for each data unit.</li>
+          <li>Generate method-specific polling, interrupt, or DMA events.</li>
+          <li>Record elapsed ticks, CPU busy ticks, and completed units.</li>
+          <li>Display the event trace and calculate performance metrics.</li>
+        </ol>
+        <p class="note">Simplifying assumptions: one tick is an abstract time unit; transfers are sequential in this model; DMA has setup and completion-notification overhead; interrupt service has a configurable CPU cost. The model is intended to teach differences in CPU involvement, not predict a specific hardware system.</p>
+      </article>
+    </section>
+
+    <footer>
+      <p><strong>COA–CO5 Micro Project</strong> · Sanjivani University, Kopargaon</p>
+      <p>Student: Rugved Kulkarni · PRN: 2125UIDM1009</p>
+      <p class="muted">Built with HTML, CSS, and vanilla JavaScript.</p>
+    </footer>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
